@@ -167,10 +167,16 @@ if __name__ == '__main__':
                             left_hand_action = [dual_gripper_action_array[1]]
                             right_hand_action = [dual_gripper_action_array[0]]
                     elif args.hand == "inspire1":
-                        print("Inspire1_Controller comming soon.")
+                        left_hand_state = []
+                        right_hand_state = []
+                        left_hand_action = []
+                        right_hand_action = []
                         pass
                     else:
-                        print("No dexterous hand set.")
+                        left_hand_state = []
+                        right_hand_state = []
+                        left_hand_action = []
+                        right_hand_action = []
                         pass
                     # head image
                     current_tv_image = tv_img_array.copy()
@@ -209,12 +215,12 @@ if __name__ == '__main__':
                                 "torque": [],                         
                             },                        
                             "left_hand": {                                                                    
-                                "qpos":   left_hand_state,           
+                                "qpos":   [],           
                                 "qvel":   [],                           
                                 "torque": [],                          
                             }, 
                             "right_hand": {                                                                    
-                                "qpos":   right_hand_state,       
+                                "qpos":   [],       
                                 "qvel":   [],                           
                                 "torque": [],  
                             }, 
@@ -249,8 +255,6 @@ if __name__ == '__main__':
                 time_elapsed = current_time - start_time
                 sleep_time = max(0, (1 / float(args.frequency)) - time_elapsed)
                 time.sleep(sleep_time)
-                # print(f"main process sleep: {sleep_time}")
-
     except KeyboardInterrupt:
         print("KeyboardInterrupt, exiting program...")
     finally:
