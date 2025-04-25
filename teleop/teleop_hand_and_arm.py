@@ -189,6 +189,9 @@ if __name__ == '__main__':
                     left_arm_action = sol_q[:7]
                     right_arm_action = sol_q[-7:]
 
+                    left_arm_torque = sol_tauff[:7]
+                    right_arm_torque = sol_tauff[-7:]
+
                     if recording:
                         colors = {}
                         depths = {}
@@ -230,12 +233,12 @@ if __name__ == '__main__':
                             "left_arm": {                                   
                                 "qpos":   left_arm_action.tolist(),       
                                 "qvel":   [],       
-                                "torque": [],      
+                                "torque": left_arm_torque.tolist(),      
                             }, 
                             "right_arm": {                                   
                                 "qpos":   right_arm_action.tolist(),       
                                 "qvel":   [],       
-                                "torque": [],       
+                                "torque": right_arm_torque.tolist(),       
                             },                         
                             "left_hand": {                                   
                                 "qpos":   left_hand_action,       
