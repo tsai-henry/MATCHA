@@ -9,43 +9,64 @@
 # 📺 视频演示
 
 <p align="center">
-  <a href="https://www.bilibili.com/video/BV124m8YXExJ" target="_blank">
-    <img src="./img/video_cover.jpg" alt="Watch the video" style="width: 35%;">
-  </a>
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <a href="https://www.bilibili.com/video/BV124m8YXExJ" target="_blank">
+          <img src="./img/video_cover.jpg" alt="Video 1" width="75%">
+        </a>
+        <p><b> G1 (29自由度) + Dex3-1</b></p>
+      </td>
+      <td align="center" width="50%">
+        <a href="https://www.bilibili.com/video/BV1SW421X7kA" target="_blank">
+          <img src="./img/video_cover2.jpg" alt="Video 2" width="75%">
+        </a>
+        <p><b> H1_2 (手臂7自由度) </b></p>
+      </td>
+    </tr>
+  </table>
 </p>
+
 
 
 # 0. 📖 介绍
 
-该仓库实现了使用 **Apple Vision Pro** 对 **宇树（Unitree）人形机器人** 的遥操作控制。
+该仓库实现了使用 **XR设备**（比如 Apple Vision Pro、PICO 4 Ultra Enterprise 或 Meta Quest 3） 对 **宇树（Unitree）人形机器人** 的遥操作控制。
 
-以下是本仓库将支持的机器人类型：
+以下是本仓库目前支持的机器人类型：
 
 <table>
   <tr>
     <th style="text-align: center;"> &#129302; 机器人 </th>
     <th style="text-align: center;"> &#9898; 状态 </th>
-    <th style="text-align: center;"> &#128221; 备注 </th>
   </tr>
   <tr>
-    <td style="text-align: center;"> G1 (29自由度) + Dex3-1 </td>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/cn/g1" target="_blank"> G1 (29自由度) </td>
     <td style="text-align: center;"> &#9989; 完成 </td>
-    <th style="text-align: center;">main分支</th>
   </tr>
   <tr>
-    <td style="text-align: center;"> H1 (手臂4自由度) </td>
-    <td style="text-align: center;"> &#9201; 进行中 </td>
-    <th style="text-align: center;"> <a href="https://github.com/unitreerobotics/avp_teleoperate/tree/h1" target="_blank">可参考该临时分支下ik解算</a> </th>
-  </tr>
-  <tr>
-    <td style="text-align: center;"> H1_2 (手臂7自由度) + Inspire </td>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/cn/g1" target="_blank"> G1 (23自由度) </td>
     <td style="text-align: center;"> &#9989; 完成 </td>
-    <th style="text-align: center;"> <a href="https://github.com/unitreerobotics/avp_teleoperate/tree/main" target="_blank">原h1_2分支变为陈旧分支，原g1分支重命名为main分支，main分支现已同时支持g1和h1_2</a>  </th>
   </tr>
   <tr>
-    <td style="text-align: center;"> ··· </td>
-    <td style="text-align: center;"> ··· </td>
-    <th style="text-align: center;"> ··· </th>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/cn/h1" target="_blank"> H1 (手臂4自由度) </td>
+    <td style="text-align: center;"> &#9989; 完成 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/cn/h1" target="_blank"> H1_2 (手臂7自由度) </td>
+    <td style="text-align: center;"> &#9989; 完成 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/cn/Dex3-1" target="_blank"> Dex3-1 灵巧手 </td>
+    <td style="text-align: center;"> &#9989; 完成 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://support.unitree.com/home/zh/G1_developer/inspire_dfx_dexterous_hand" target="_blank"> 因时灵巧手 </td>
+    <td style="text-align: center;"> &#9989; 完成 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> ... </td>
+    <td style="text-align: center;"> ... </td>
   </tr>
 </table>
 
@@ -54,8 +75,16 @@
 以下是需要的设备和接线示意图：
 
 <p align="center">
-  <a href="https://oss-global-cdn.unitree.com/static/51911de26023417aa481ca30a2c6183e_4920x2600.png">
-    <img src="https://oss-global-cdn.unitree.com/static/51911de26023417aa481ca30a2c6183e_4920x2600.png" alt="Watch the Document" style="width: 65%;">
+  <a href="https://oss-global-cdn.unitree.com/static/849e601aedca41e39014ec0f75a86c1e_2950x1445.png">
+    <img src="https://oss-global-cdn.unitree.com/static/849e601aedca41e39014ec0f75a86c1e_2950x1445.png" alt="Watch the Document" style="width: 100%;">
+  </a>
+</p>
+
+以下是网络拓扑图，以G1机器人为例：
+
+<p align="center">
+  <a href="https://oss-global-cdn.unitree.com/static/9871e3bac4c54140b0839c68baf48a4a_1872x929.png">
+    <img src="https://oss-global-cdn.unitree.com/static/9871e3bac4c54140b0839c68baf48a4a_1872x929.png" alt="Watch the Document" style="width: 100%;">
   </a>
 </p>
 
@@ -106,7 +135,7 @@ unitree@Host:~$ conda activate tv
 
 
 
-# 2. ⚙️ TeleVision 和 Apple Vision Pro 配置
+# 2. ⚙️ 配置
 
 ## 2.1 📥 基础
 
@@ -119,7 +148,9 @@ unitree@Host:~$ conda activate tv
 
 ## 2.2 🔌 本地流媒体
 
-**Apple** 不允许在非 HTTPS 连接上使用 WebXR。要在本地测试应用程序，我们需要创建一个自签名证书并在客户端上安装它。您需要一台 Ubuntu 机器和一个路由器。将 Apple Vision Pro 和 Ubuntu **主机**连接到同一个路由器。
+**Apple Vision Pro** 
+
+苹果不允许在非 HTTPS 连接上使用 WebXR。要在本地测试应用程序，我们需要创建一个自签名证书并在客户端上安装它。您需要一台 Ubuntu 机器和一个路由器。将 Apple Vision Pro 和 Ubuntu **主机**连接到同一个路由器。
 
 1. 安装 mkcert：https://github.com/FiloSottile/mkcert
 2. 检查**主机**本地 IP 地址：
@@ -163,6 +194,24 @@ unitree@Host:~$ conda activate tv
 设置 > 应用 > Safari > 高级 > 功能标志 > 启用 WebXR 相关功能。
 
 > 提醒：在新版本 Vision OS 2 系统中，该步骤有所不同：将证书通过 AirDrop 复制到 Apple Vision Pro 设备后，将会在设置 APP 中左上角账户栏的下方出现证书相关信息栏，点击进去即可启用对该证书的信任。
+
+------
+
+**2.2.2 PICO 4 Ultra Enterprise or Meta Quest 3**
+
+我们已经尝试在 PICO 4 Ultra Enterprise 和 Meta-Quest 3 上使用手部追踪进行遥操作。
+
+PICO 4 Ultra Enterprise 的系统规格如下：
+
+> 系统版本：5.12.6.U；Android 版本号：14；软件版本号：c000_cf01_bv1.0.1_sv5.12.6_202412121344_sparrow_b4244_user
+>
+> 浏览器版本：[4.0.28 beta version](https://github.com/vuer-ai/vuer/issues/45#issuecomment-2674918619)
+
+Meta-Quest 3 的系统规格如下：
+
+> 系统版本：49829370066100510；版本：62.0.0.273.343.570372087；运行时版本：62.0.0.269.341.570372063；操作系统版本：SQ3A.220605.009.A1
+
+更多配置步骤信息，您可以查看该 [issue](https://github.com/unitreerobotics/avp_teleoperate/issues/32)。
 
 ## 2.3 🔎 单元测试
 
@@ -241,7 +290,7 @@ unitree@PC2:~/h1_inspire_service/build$ ./h1_hand_example
 
 1. 修改  `~/avp_teleoperate/teleop/teleop_hand_and_arm.py` 中 `if __name__ == '__main__':` 代码下方的 `img_config` 图像客户端配置，它应该与 3.1 节中您在 PC2 配置的图像服务器参数相同。
 
-2. 根据您的机器人配置选择不同的启动参数
+2. 根据您的机器人配置选择不同的启动参数。以下是一些启动命令示例：
 
    ```bash
    # 1. G1(29DoF)机器人 + Dex3-1 灵巧手 （实际上，G1_29是--arm的默认参数，可以选择不填写）
@@ -249,12 +298,18 @@ unitree@PC2:~/h1_inspire_service/build$ ./h1_hand_example
    
    # 2. 仅G1(29DoF)机器人
    (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py
+
+   # 3. G1 (23DoF) 机器人
+   (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=G1_23
    
-   # 3. H1_2机器人，（一代Inspire灵巧手暂时只在 H1_2 分支支持，Main分支将后续更新）
-   (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=H1_2
+   # 4. H1_2 机器人 + 一代 Inspire 灵巧手
+   (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=H1_2 --hand=inspire1
+
+   # 5. H1 机器人
+   (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=H1
    
-   # 4. 如果您想开启数据可视化+录制，还可以追加 --record 选项
-   (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --record
+   # 6. 如果您想开启数据可视化+录制，还可以追加 --record 选项
+   (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=G1_23 --record
    ```
 
 3. 程序如果正常启动，终端最后一行将停留在 “Please enter the start signal (enter 'r' to start the subsequent program):” 的字符串输出。
@@ -321,6 +376,7 @@ avp_teleoperate/
 │   │      ├── episode_writer.py          [用于记录模仿学习的数据]  
 │   │      ├── mat_tool.py                [一些小的数学工具]
 │   │      ├── weighted_moving_filter.py  [用于过滤关节数据的滤波器]
+│   │      ├── rerun_visualizer.py        [用于可视化录制数据]
 │   │
 │   │──teleop_hand_and_arm.py    [遥操作的启动执行代码]
 ```
