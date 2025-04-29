@@ -8,8 +8,9 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-from teleop.robot_control.episode_loader import EpisodeLoader
+from teleop.utils.episode_loader import EpisodeLoader
 from teleop.robot_control.robot_arm import H1_2_ArmController
+from teleop.robot_control.robot_hand_inspire_rh56dftp import ReplayInspireControllerRH56DFTP as InspireController
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -22,6 +23,7 @@ if __name__ == '__main__':
     ep_loader = EpisodeLoader(ep_path)
 
     arm_ctrl = H1_2_ArmController()
+    hand_ctrl = InspireController()
 
     try:
         user_input = input("Please enter the start signal (enter 'r' to start the subsequent program):\n")
@@ -34,12 +36,18 @@ if __name__ == '__main__':
                 start_time = time.time()
                 data_obj = ep_loader[i]
 
-                left_arm_action_qpos = data_obj["left_arm_action_qpos"]
-                right_arm_action_qpos = data_obj["right_arm_action_qpos"]
+                left_arm_action_qpos = data_obj["actions"]["left_arm"]["dof_angles"]
+                right_arm_action_qpos = data_obj["actions"]["right_arm"]["dof_angles"]
                 qpos = left_arm_action_qpos + right_arm_action_qpos
 
-                torques = [0.0] * len(qpos) # replay with just position control
+                left_arm_action_torques = data_obj["actions"]["left_arm"]["dof_torques"]
+                right_arm_action_torques = data_obj["actions"]["right_arm"]["dof_torques"]
+                torques = left_arm_action_torques + right_arm_action_torques
                 arm_ctrl.ctrl_dual_arm(qpos, torques)
+
+                left_hand_action = data_obj["actions"]["left_hand"]["dof_angles"]
+                right_hand_action = data_obj["actions"]["right_hand"]["dof_angles"]
+                hand_ctrl.ctrl_dual_hand(left_hand_action, right_hand_action)
 
                 idx += 1
 

@@ -16,6 +16,33 @@ state_topic_l = "rt/inspire_hand/state/l"
 touch_ropic_r = "rt/inspire_hand/touch/r"
 touch_topic_l = "rt/inspire_hand/touch/l"
 
+
+class ReplayInspireControllerRH56DFTP:
+    def __init__(self):
+        command_topic_l = "rt/inspire_hand/ctrl/l"
+        command_topic_r = "rt/inspire_hand/ctrl/r"
+
+        self.left_hand_pub = ChannelPublisher(command_topic_l, inspire_dds.inspire_hand_ctrl)
+        self.right_hand_pub = ChannelPublisher(command_topic_r, inspire_dds.inspire_hand_ctrl)
+        self.left_hand_pub.Init()
+        self.right_hand_pub.Init()
+
+        self.left_cmd = inspire_hand_defaut.get_inspire_hand_ctrl()
+        self.right_cmd = inspire_hand_defaut.get_inspire_hand_ctrl()
+        self.left_cmd.mode = 0b0001
+        self.right_cmd.mode = 0b0001
+
+    def ctrl_dual_hand(self, left_q_target, right_q_target):
+        """
+        Send joint position commands to both hands.
+        """
+        self.left_cmd.angle_set = (left_q_target * 1000.0).astype(np.int16).tolist()
+        self.right_cmd.angle_set = (right_q_target * 1000.0).astype(np.int16).tolist()
+
+        self.left_hand_pub.Write(self.left_cmd)
+        self.right_hand_pub.Write(self.right_cmd)
+
+
 class InspireControllerRH56DFTP:
     def __init__(self, left_hand_array, right_hand_array, dual_hand_data_lock=None, dual_hand_state_array=None, dual_hand_action_array=None, dual_hand_touch_array=None, fps=100.0, Unit_Test=False):
         print("Initializing InspireControllerRH56DFTP...")
