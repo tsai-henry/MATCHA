@@ -1,7 +1,6 @@
 import time
 import argparse
-import cv2 
-
+import numpy as np 
 import os 
 import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,10 +43,10 @@ if __name__ == '__main__':
                 right_arm_action_torques = data_obj["actions"]["right_arm"]["dof_torques"]
                 torques = left_arm_action_torques + right_arm_action_torques
                 arm_ctrl.ctrl_dual_arm(qpos, torques)
-
+                
                 left_hand_action = data_obj["actions"]["left_hand"]["dof_angles"]
                 right_hand_action = data_obj["actions"]["right_hand"]["dof_angles"]
-                hand_ctrl.ctrl_dual_hand(left_hand_action, right_hand_action)
+                hand_ctrl.ctrl_dual_hand(np.array(left_hand_action), np.array(right_hand_action))
 
                 idx += 1
 
@@ -56,8 +55,9 @@ if __name__ == '__main__':
                 sleep_time = max(0, (1.0 / args.frequency) - time_elapsed)
                 time.sleep(sleep_time)
             
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt, safely exiting...")
+    except Exception as e:
+        print(e)
+        print("Error, safely exiting...")
     finally:
         arm_ctrl.ctrl_dual_arm_go_home()
         exit(0)

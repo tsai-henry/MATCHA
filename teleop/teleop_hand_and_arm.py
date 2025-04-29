@@ -215,8 +215,9 @@ if __name__ == '__main__':
                 time_elapsed = current_time - start_time
                 sleep_time = max(0, (1 / float(args.frequency)) - time_elapsed)
                 time.sleep(sleep_time)
-    except KeyboardInterrupt:
-        print("KeyboardInterrupt, exiting program...")
+    except Exception as e:
+        print(e)
+        print("Error, safely exiting...")
     finally:
         arm_ctrl.ctrl_dual_arm_go_home()
         tv_img_shm.unlink()
