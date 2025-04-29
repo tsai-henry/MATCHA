@@ -89,7 +89,9 @@ if __name__ == '__main__':
         dual_hand_data_lock = Lock()
         dual_hand_state_array = Array('d', 12, lock = False)   # [output] current left, right hand state(12) data.
         dual_hand_action_array = Array('d', 12, lock = False)  # [output] current left, right hand action(12) data.
-        hand_ctrl = InspireController(left_hand_array, right_hand_array, dual_hand_data_lock, dual_hand_state_array, dual_hand_action_array)
+        dual_hand_touch_array = Array('d', 2124, lock = False)   # [output] current left, right hand touch(2124) data.
+
+        hand_ctrl = InspireController(left_hand_array, right_hand_array, dual_hand_data_lock, dual_hand_state_array, dual_hand_action_array, dual_hand_touch_array)
     else:
         raise ValueError(f"Unsupported hand controller: {args.hand}")
     
@@ -117,10 +119,7 @@ if __name__ == '__main__':
                 current_lr_arm_dq = arm_ctrl.get_current_dual_arm_dq()
 
                 # solve ik using motor data and wrist pose, then use ik results to control arms.
-                time_ik_start = time.time()
                 sol_q, sol_tauff  = arm_ik.solve_ik(left_wrist, right_wrist, current_lr_arm_q, current_lr_arm_dq)
-                time_ik_end = time.time()
-                # print(f"ik:\t{round(time_ik_end - time_ik_start, 6)}")
                 arm_ctrl.ctrl_dual_arm(sol_q, sol_tauff)
 
                 tv_resized_image = cv2.resize(tv_img_array, (tv_img_shape[1] // 2, tv_img_shape[0] // 2))
@@ -143,6 +142,8 @@ if __name__ == '__main__':
                         right_hand_state = dual_hand_state_array[-6:]
                         left_hand_action = dual_hand_action_array[:6]
                         right_hand_action = dual_hand_action_array[-6:]
+                        left_hand_touch = dual_hand_touch_array[:1062]
+                        right_hand_touch = dual_hand_touch_array[-1062:]
                     else:
                         pass
                     # head image
@@ -183,10 +184,12 @@ if __name__ == '__main__':
                                 "dof_angles":   right_arm_state.tolist(),                            
                             },                        
                             "left_hand": {                                                                    
-                                "dof_angles":   left_hand_state,                                 
+                                "dof_angles":   left_hand_state,
+                                "tactiles": hand_ctrl._unflatten_touch_arr(left_hand_touch)                            
                             }, 
                             "right_hand": {                                                                    
                                 "dof_angles":   right_hand_state,
+                                "tactiles": hand_ctrl._unflatten_touch_arr(right_hand_touch)
                             }, 
                         }
                         actions = {
