@@ -102,11 +102,11 @@ class InspireControllerRH56DFTP:
         while self.running:
             left_msg = self.left_hand_touch_sub.Read()
             if left_msg is not None:
-                self.left_hand_touch_array[:] = self._flatten_touch_msg(left_msg) / 4095.0 # normalize
+                self.left_hand_touch_array[:] = (np.array(self._flatten_touch_msg(left_msg)) / 4095.0).tolist() # normalize
 
             right_msg = self.right_hand_touch_sub.Read()
             if right_msg is not None:
-                self.right_hand_touch_array[:] = self._flatten_touch_msg(right_msg) / 4095.0 
+                self.right_hand_touch_array[:] = (np.array(self._flatten_touch_msg(right_msg)) / 4095.0).tolist()
 
             time.sleep(0.002)
     
