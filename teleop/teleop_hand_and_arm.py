@@ -139,12 +139,13 @@ if __name__ == '__main__':
                 # record data
                 if args.record:
                     if args.hand == "inspire":
-                        left_hand_state = dual_hand_state_array[:6]
-                        right_hand_state = dual_hand_state_array[-6:]
-                        left_hand_action = dual_hand_action_array[:6]
-                        right_hand_action = dual_hand_action_array[-6:]
-                        left_hand_touch = dual_hand_touch_array[:1062]
-                        right_hand_touch = dual_hand_touch_array[-1062:]
+                        with dual_hand_data_lock:
+                            left_hand_state = dual_hand_state_array[:6]
+                            right_hand_state = dual_hand_state_array[-6:]
+                            left_hand_action = dual_hand_action_array[:6]
+                            right_hand_action = dual_hand_action_array[-6:]
+                            left_hand_touch = dual_hand_touch_array[:1062]
+                            right_hand_touch = dual_hand_touch_array[-1062:]
                     else:
                         pass
                     # head image
