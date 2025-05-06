@@ -57,7 +57,7 @@ class RetargetingConfig:
     has_joint_limits: bool = True
 
     # Mimic joint tag
-    ignore_mimic_joint: bool = True
+    ignore_mimic_joint: bool = False
 
     # Low pass filter
     low_pass_alpha: float = 0.1
