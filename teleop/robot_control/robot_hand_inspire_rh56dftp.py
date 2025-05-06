@@ -210,7 +210,7 @@ class InspireControllerRH56DFTP:
                     ref_left_value = left_hand_mat[inspire_tip_indices]
                     ref_right_value = right_hand_mat[inspire_tip_indices]
 
-                    left_q_target = self.hand_retargeting.left_retargeting.retarget(ref_left_value)[self.hand_retargeting.right_dex_retargeting_to_hardware]
+                    left_q_target = self.hand_retargeting.left_retargeting.retarget(ref_left_value)[self.hand_retargeting.left_dex_retargeting_to_hardware]
                     right_q_target = self.hand_retargeting.right_retargeting.retarget(ref_right_value)[self.hand_retargeting.right_dex_retargeting_to_hardware]
 
                     # Normalize to [0,1]
