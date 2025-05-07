@@ -4,9 +4,12 @@ import argparse
 import cv2
 from multiprocessing import shared_memory, Array, Lock
 import threading
-
-import os 
 import sys
+import pyrealsense2 as rs
+import os
+from datetime import datetime
+import time
+import traceback
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
@@ -18,6 +21,70 @@ from teleop.robot_control.robot_arm_ik import H1_2_ArmIK
 from teleop.robot_control.robot_hand_inspire_rh56dftp import InspireControllerRH56DFTP as InspireController
 from teleop.image_server.image_client import ImageClient
 from teleop.utils.episode_writer import EpisodeWriter
+from bag_converter import convert_to_dataset
+
+RAW_BAG_SAVE_DIR = "recordings/raw_bags"
+RGB_AND_DEPTH_SAVE_DIR = "recordings/rgb_and_depth"
+
+# Top of script (above __main__)
+stop_rs_event = threading.Event()
+rs_thread = None
+
+# Function definition
+def start_realsense_recording(name, save_dir=RAW_BAG_SAVE_DIR, stop_event=None):
+    # Expand and create the save directory
+    save_path = os.path.expanduser(save_dir)
+    os.makedirs(save_path, exist_ok=True)
+    bag_path = os.path.join(save_path, f"{name}.bag")
+
+    # Detect RealSense devices
+    ctx = rs.context()
+    devices = ctx.query_devices()
+    if not devices:
+        raise RuntimeError("No RealSense devices found.")
+
+    external_serial = None
+    print("[D435i] Connected RealSense devices:")
+    for dev in devices:
+        name = dev.get_info(rs.camera_info.name)
+        serial = dev.get_info(rs.camera_info.serial_number)
+        print(f" - {name} (Serial: {serial})")
+        if "Intel RealSense D435I" in name:
+            external_serial = serial
+
+    if not external_serial:
+        raise RuntimeError("D435i not found among connected devices.")
+
+    def _record(serial, path, stop_event):
+        pipeline = rs.pipeline()
+        config = rs.config()
+        try:
+            config.enable_device(serial)
+            config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+            config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+            config.enable_record_to_file(path)
+
+            print(f"[D435i] Recording to {path}")
+            pipeline.start(config)
+            time.sleep(1.0)  # Warm-up
+
+            while not stop_event.is_set():
+                frames = pipeline.wait_for_frames(timeout_ms=5000)
+                # optionally inspect frames
+
+        except Exception as e:
+            print(f"[D435i ERROR] {e}")
+            traceback.print_exc()
+        finally:
+            print("[D435i] Stopping pipeline and finalizing bag...")
+            pipeline.stop()
+            print("[D435i] Recording stopped.")
+
+    rs_thread = threading.Thread(target=_record, args=(external_serial, bag_path, stop_event))
+    rs_thread.start()
+    return rs_thread
+
+
 
 
 if __name__ == '__main__':
@@ -26,8 +93,10 @@ if __name__ == '__main__':
     parser.add_argument('--frequency', type = int, default = 30.0, help = 'save data\'s frequency')
 
     parser.add_argument('--record', action = 'store_true', help = 'Save data or not')
+    parser.add_argument('--name', help = 'Name of recording')
     parser.add_argument('--no-record', dest = 'record', action = 'store_false', help = 'Do not save data')
     parser.set_defaults(record = False)
+    parser.set_defaults(name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
     parser.add_argument('--arm', type=str, choices=['H1_2'], default='H1_2', help='Select arm controller')
     parser.add_argument('--hand', type=str, choices=['inspire'], default='inspire', help='Select hand controller')
@@ -37,10 +106,10 @@ if __name__ == '__main__':
 
     # image client: img_config should be the same as the configuration in image_server.py (of Robot's development computing unit)
     img_config = {
-        'fps': 30,                                                          # frame per second
+        'fps': 30,                                                          
         'head_camera_type': 'realsense',                                  # opencv or realsense
         'head_camera_image_shape': [480, 640],                            # Head camera resolution  [height, width]
-        'head_camera_id_numbers': ["332322073268"]                                    # '/dev/video0' (opencv)
+        'head_camera_id_numbers': ["332322073268"]                        # '/dev/video0' (opencv)
     }
     ASPECT_RATIO_THRESHOLD = 2.0 # If the aspect ratio exceeds this value, it is considered binocular
     if len(img_config['head_camera_id_numbers']) > 1 or (img_config['head_camera_image_shape'][1] / img_config['head_camera_image_shape'][0] > ASPECT_RATIO_THRESHOLD):
@@ -100,12 +169,39 @@ if __name__ == '__main__':
         recording = False
         
     try:
+        cv2.namedWindow("record image", cv2.WINDOW_NORMAL)
+        print("Press 'r' to begin. After that, use keys:")
+        print("  's' - Start/stop recording")
+        print("  'q' - Quit and save")
+        print("  'e' - Emergency exit")
+
         user_input = input("Please enter the start signal (enter 'r' to start the subsequent program):\n")
         if user_input.lower() == 'r':
+            # Start external RealSense D435i recording thread
+            stop_rs_event = threading.Event()
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            bag_name = f"{args.name}_{timestamp}"
+            rs_thread = start_realsense_recording(stop_event=stop_rs_event, name=bag_name)
             arm_ctrl.speed_gradual_max()
 
             running = True
             while running:
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord('q'):
+                    print("[KEY] Quit pressed. Stopping...")
+                    running = False
+                elif key == ord('e'):
+                    print("[KEY] Emergency exit.")
+                    os._exit(1)
+                elif key == ord('s') and args.record:
+                    recording = not recording
+                    print(f"[KEY] Recording {'started' if recording else 'stopped'}.")
+                    if recording:
+                        if not recorder.create_episode():
+                            recording = False
+                    else:
+                        recorder.save_episode()
+
                 start_time = time.time()
                 head_rmat, left_wrist, right_wrist, left_hand, right_hand = tv_wrapper.get_data()
 
@@ -125,11 +221,17 @@ if __name__ == '__main__':
 
                 tv_resized_image = cv2.resize(tv_img_array, (tv_img_shape[1] // 2, tv_img_shape[0] // 2))
                 cv2.imshow("record image", tv_resized_image)
+                
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('q'):
+                    print("[KEY] Quit pressed. Stopping...")
                     running = False
+                elif key == ord('e'):
+                    print("[KEY] Emergency exit!")
+                    os._exit(1)
                 elif key == ord('s') and args.record:
-                    recording = not recording # state flipping
+                    recording = not recording
+                    print(f"[KEY] Recording {'started' if recording else 'stopped'}.")
                     if recording:
                         if not recorder.create_episode():
                             recording = False
@@ -220,6 +322,27 @@ if __name__ == '__main__':
         print(e)
         print("Error, safely exiting...")
     finally:
+        # End RealSense recording
+        if rs_thread is not None:
+            stop_rs_event.set()
+            rs_thread.join()
+
+            bag_path = f"{RAW_BAG_SAVE_DIR}/{bag_name}.bag"
+
+            # Wait for bag to finish writing
+            print("[INFO] Waiting for bag file to finalize...")
+            prev_size = -1
+            for _ in range(20):  # ~2 seconds max
+                if os.path.exists(bag_path):
+                    size = os.path.getsize(bag_path)
+                    if size > 0 and size == prev_size:
+                        break
+                    prev_size = size
+                time.sleep(0.1)
+            else:
+                print(f"[WARNING] Bag file may still be incomplete: {bag_path}")
+
+            convert_to_dataset(bag_path, RGB_AND_DEPTH_SAVE_DIR, args.name, delete_bag=True)
         arm_ctrl.ctrl_dual_arm_go_home()
         tv_img_shm.unlink()
         tv_img_shm.close()

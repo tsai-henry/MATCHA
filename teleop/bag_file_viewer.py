@@ -3,7 +3,8 @@ import numpy as np
 import cv2
 import sys
 
-bag_file = "/home/zekai/Documents/realsense_recordings/" + str(sys.argv[1]) + ".bag"
+bag_file = "/home/zekai/Documents/realsense_recordings/d435i_recording_2025-05-06_23-11-28.bag"
+
 # Set up pipeline to read from file
 pipeline = rs.pipeline()
 config = rs.config()
@@ -12,11 +13,21 @@ config.enable_stream(rs.stream.color)
 config.enable_stream(rs.stream.depth)
 
 # Start pipeline
-pipeline.start(config)
+profile = pipeline.start(config)
+
+# Disable real-time playback to allow processing at your own pace
+device = profile.get_device()
+playback = device.as_playback()
+playback.set_real_time(False)
 
 try:
     while True:
-        frames = pipeline.wait_for_frames()
+        try:
+            frames = pipeline.wait_for_frames(timeout_ms=1000)
+        except RuntimeError:
+            print("No frame arrived within timeout. Possibly end of file.")
+            break
+
         color_frame = frames.get_color_frame()
         depth_frame = frames.get_depth_frame()
 
