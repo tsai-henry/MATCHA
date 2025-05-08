@@ -55,6 +55,40 @@ def compute_patch_averages(touch_array):
     return {k: float(np.mean(v)) for k, v in touch_array.items()}
 
 
+def colorize_pressure(val, max_val=0.3):
+    """
+    Returns an ANSI color string depending on the intensity of the value relative to max_val.
+    Blue = low, Red = high.
+    
+    Args:
+        val (float): Pressure value.
+        max_val (float): Maximum expected pressure for scaling.
+    """
+    normalized = np.clip(val / max_val, 0.0, 1.0)
+    red = int(normalized * 255)
+    blue = int((1.0 - normalized) * 255)
+    return f"\033[38;2;{red};0;{blue}m{val:.4f}\033[0m"
+
+def print_colored_patch_averages_both_hands(left_avg, right_avg):
+    """
+    Print patch averages for both hands side by side with color-coded intensity.
+    
+    Args:
+        left_avg (dict): Patch name to average pressure (left hand).
+        right_avg (dict): Patch name to average pressure (right hand).
+    """
+    all_keys = sorted(set(left_avg.keys()).union(right_avg.keys()))
+    max_key_len = max(len(k) for k in all_keys)
+    
+    print("Average pressure per patch (Left vs Right):")
+    for k in all_keys:
+        left_val = left_avg.get(k, 0.0)
+        right_val = right_avg.get(k, 0.0)
+        left_col = colorize_pressure(np.clip(left_val, 0, 1))
+        right_col = colorize_pressure(np.clip(right_val, 0, 1))
+        print(f"{k.ljust(max_key_len)} : {left_col}   |   {right_col}")
+
+
 def visualize_hand_touch_map(averaged_patches):
     """
     Visualize average tactile values for the whole hand.
@@ -72,6 +106,7 @@ def visualize_hand_touch_map(averaged_patches):
     plt.grid(True, axis='x', linestyle='--', alpha=0.4)
     plt.tight_layout()
     plt.show()
+
 
 def interpolate_three_fingers(source_finger, finger_positions):
     """
@@ -92,6 +127,46 @@ def interpolate_three_fingers(source_finger, finger_positions):
     for finger, idx in dofs.items():
         if finger not in ["thumb", "thumb_spread"] and idx != source_idx:
             finger_positions[idx] = finger_positions[source_idx]
+    return finger_positions
+
+
+def adjust_fingers_by_pressure(averaged_patches, source_finger, finger_positions, delta=0.05):
+    """
+    Increase other fingers' angles if their pressure is less than source_finger's.
+
+    Args:
+        averaged_patches (dict): Patch name to average pressure.
+        source_finger (str): Name of finger to compare from (e.g. "index").
+        finger_positions (list or np.ndarray): 6-DOF joint values.
+        delta (float): Amount to increase under-pressured fingers by.
+
+    Returns:
+        np.ndarray: Adjusted joint values.
+    """
+    finger_positions = np.array(finger_positions).copy()
+    source_idx = dofs[source_finger]
+
+    # Map finger name to its main patch
+    patch_map = {
+        "index": "fingerone_top_touch",
+        "middle": "fingertwo_top_touch",
+        "ring": "fingerthree_top_touch",
+        "pinky": "fingerfour_top_touch",
+        "thumb": "fingerfive_top_touch"
+    }
+
+    if source_finger not in patch_map:
+        raise ValueError(f"Unsupported source_finger: {source_finger}")
+
+    source_pressure = averaged_patches.get(patch_map[source_finger], 0.0)
+
+    for finger, idx in dofs.items():
+        if finger in ["thumb_spread", source_finger]:
+            continue
+        patch = patch_map.get(finger)
+        if patch and averaged_patches.get(patch, 0.0) < source_pressure:
+            finger_positions[idx] += delta
+
     return finger_positions
     
 
@@ -317,26 +392,39 @@ class InspireControllerRH56DFTP:
 
                 # Interpolate fingers when testing disability
 
-                # Index finger cloning
+                # Index finger position cloning
                 # source_finger = "index"
                 # left_q_target = interpolate_three_fingers(source_finger, left_q_target)
                 # right_q_target = interpolate_three_fingers(source_finger, right_q_target)
 
                 # Assume you have already collected this from shared memory
+                # Index finger pressure cloning
+                # Split dual hand array
                 left_hand_touch = dual_hand_touch_array[:1062]
+                right_hand_touch = dual_hand_touch_array[1062:]
+
+                # Unpack and parse touch arrays
                 left_touch_dict = self._unflatten_touch_arr(left_hand_touch)
+                right_touch_dict = self._unflatten_touch_arr(right_hand_touch)
 
-                # 1. Get all sensor values from the "fingerone_tip_touch" patch
-                tip_data = get_patch_data(left_touch_dict, "fingerone_tip_touch")
-                print("Sensor values in fingerone_tip_touch:", tip_data)
+                # 1. Get sensor values from the "fingerone_tip_touch" patch
+                left_tip_data = get_patch_data(left_touch_dict, "fingerone_tip_touch")
+                right_tip_data = get_patch_data(right_touch_dict, "fingerone_tip_touch")
+                print("Left hand  - Sensor values in 'fingerone_tip_touch':", left_tip_data)
+                print("Right hand - Sensor values in 'fingerone_tip_touch':", right_tip_data)
 
-                # 2. Compute average patch values for the entire hand
-                averaged_patches = compute_patch_averages(left_touch_dict)
-                print("Average pressure per patch:", averaged_patches)
+                # 2. Compute average patch values for each hand
+                left_avg_patches = compute_patch_averages(left_touch_dict)
+                right_avg_patches = compute_patch_averages(right_touch_dict)
+
+                # 3. Print side-by-side comparison
+                print_colored_patch_averages_both_hands(left_avg_patches, right_avg_patches)
 
                 # # 3. Visualize the patch averages across the hand
                 # visualize_hand_touch_map(averaged_patches)
-
+                # 4. Interpolate finger positions based on pressure
+                left_q_target = adjust_fingers_by_pressure(left_avg_patches, "index", left_q_target)
+                right_q_target = adjust_fingers_by_pressure(right_avg_patches, "index", right_q_target)
 
                 self.ctrl_dual_hand(left_q_target, right_q_target)
 
