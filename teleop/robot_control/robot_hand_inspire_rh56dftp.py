@@ -25,6 +25,54 @@ dofs = {
     "thumb_spread": 5
     }
 
+# === Tactile processing and visualization ===
+def get_patch_data(touch_array, section_name):
+    """
+    Extract sensor values from a specific tactile patch.
+    
+    Args:
+        touch_array (dict): Output from _unflatten_touch_arr.
+        section_name (str): Key name for the patch.
+
+    Returns:
+        np.ndarray: 1D array of normalized sensor values.
+    """
+    if section_name not in touch_array:
+        raise ValueError(f"Section '{section_name}' not found in touch array.")
+    return np.array(touch_array[section_name])
+
+
+def compute_patch_averages(touch_array):
+    """
+    Compute the average value of each tactile patch.
+
+    Args:
+        touch_array (dict): Output from _unflatten_touch_arr.
+
+    Returns:
+        dict: Mapping from patch name to average pressure value.
+    """
+    return {k: float(np.mean(v)) for k, v in touch_array.items()}
+
+
+def visualize_hand_touch_map(averaged_patches):
+    """
+    Visualize average tactile values for the whole hand.
+
+    Args:
+        averaged_patches (dict): Output from compute_patch_averages().
+    """
+    labels = list(averaged_patches.keys())
+    values = list(averaged_patches.values())
+
+    plt.figure(figsize=(10, 6))
+    bars = plt.barh(labels, values, color='darkred')
+    plt.xlabel("Average Normalized Pressure")
+    plt.title("Tactile Sensor Averages per Patch")
+    plt.grid(True, axis='x', linestyle='--', alpha=0.4)
+    plt.tight_layout()
+    plt.show()
+
 def interpolate_three_fingers(source_finger, finger_positions):
     """
     Copies the source finger's position to the other non-thumb fingers.
@@ -268,9 +316,27 @@ class InspireControllerRH56DFTP:
                         dual_hand_touch_array[:] = touch_data
 
                 # Interpolate fingers when testing disability
-                source_finger = "index"
-                left_q_target = interpolate_three_fingers(source_finger, left_q_target)
-                right_q_target = interpolate_three_fingers(source_finger, right_q_target)
+
+                # Index finger cloning
+                # source_finger = "index"
+                # left_q_target = interpolate_three_fingers(source_finger, left_q_target)
+                # right_q_target = interpolate_three_fingers(source_finger, right_q_target)
+
+                # Assume you have already collected this from shared memory
+                left_hand_touch = dual_hand_touch_array[:1062]
+                left_touch_dict = self._unflatten_touch_arr(left_hand_touch)
+
+                # 1. Get all sensor values from the "fingerone_tip_touch" patch
+                tip_data = get_patch_data(left_touch_dict, "fingerone_tip_touch")
+                print("Sensor values in fingerone_tip_touch:", tip_data)
+
+                # 2. Compute average patch values for the entire hand
+                averaged_patches = compute_patch_averages(left_touch_dict)
+                print("Average pressure per patch:", averaged_patches)
+
+                # # 3. Visualize the patch averages across the hand
+                # visualize_hand_touch_map(averaged_patches)
+
 
                 self.ctrl_dual_hand(left_q_target, right_q_target)
 
