@@ -9,34 +9,82 @@
 # 📺 ビデオデモ
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=OTWHXTu09wE" target="_blank">
-    <img src="https://img.youtube.com/vi/OTWHXTu09wE/maxresdefault.jpg" alt="Watch the video" style="width: 35%;">
-  </a>
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <a href="https://www.youtube.com/watch?v=OTWHXTu09wE" target="_blank">
+          <img src="https://img.youtube.com/vi/OTWHXTu09wE/maxresdefault.jpg" alt="Video 1" width="75%">
+        </a>
+        <p><b> G1 (29自由度) + Dex3-1 </b></p>
+      </td>
+      <td align="center" width="50%">
+        <a href="https://www.youtube.com/watch?v=pNjr2f_XHoo" target="_blank">
+          <img src="https://img.youtube.com/vi/pNjr2f_XHoo/maxresdefault.jpg" alt="Video 2" width="75%">
+        </a>
+        <p><b> H1_2（腕 7自由度）</b></p>
+      </td>
+    </tr>
+  </table>
 </p>
-
 
 
 
 # 0. 📖 イントロダクション
 このリポジトリは、**Apple Vision Pro** を使用して **Unitree ヒューマノイドロボット** を遠隔操作するためのものです。
 
-以下は、このリポジトリがサポートするロボットの種類です：
+以下は本リポジトリで現在サポートされているロボットの種類です,
 
-|            ロボット            | ステータス |                             備考                             |
-| :----------------------------: | :--------: | :----------------------------------------------------------: |
-|     G1 (29自由度) + Dex3-1     |   ✅ 完了   |                         mainブランチ                         |
-|       H1 (アーム4自由度)       |  ⏳ 進行中  | [この一時ブランチのIKソルバーを参照](https://github.com/unitreerobotics/avp_teleoperate/tree/h1) |
-| H1_2 (アーム7自由度) + Inspire |   ✅ 完了   | [元のh1_2ブランチは古くなり、元のg1ブランチがmainブランチに改名され、mainブランチは現在g1とh1_2の両方をサポート](https://github.com/unitreerobotics/avp_teleoperate/tree/main) |
-|              ...               |    ...     |                             ...                              |
+<table>
+  <tr>
+    <th style="text-align: center;"> 🤖 ロボット </th>
+    <th style="text-align: center;"> ⚪ ステータス </th>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/g1" target="_blank"> G1（29自由度） </td>
+    <td style="text-align: center;"> ✅ 完了 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/g1" target="_blank"> G1（23自由度） </td>
+    <td style="text-align: center;"> ✅ 完了 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/h1" target="_blank"> H1（腕 4自由度） </td>
+    <td style="text-align: center;"> ✅ 完了 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/h1" target="_blank"> H1_2（腕 7自由度） </td>
+    <td style="text-align: center;"> ✅ 完了 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://www.unitree.com/Dex3-1" target="_blank"> Dex3-1 ハンド </td>
+    <td style="text-align: center;"> ✅ 完了 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> <a href="https://support.unitree.com/home/en/G1_developer/inspire_dfx_dexterous_hand" target="_blank"> Inspire ハンド </td>
+    <td style="text-align: center;"> ✅ 完了 </td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"> ... </td>
+    <td style="text-align: center;"> ... </td>
+  </tr>
+</table>
+
 
 以下は、必要なデバイスと配線図です：
 
 <p align="center">
-  <a href="https://oss-global-cdn.unitree.com/static/e0ca680eda164e31bd0ff6f8fb50604c_5050x2590.png">
-    <img src="https://oss-global-cdn.unitree.com/static/e0ca680eda164e31bd0ff6f8fb50604c_5050x2590.png" alt="Watch the Document" style="width: 65%;">
+  <a href="https://oss-global-cdn.unitree.com/static/0ab3a06368464245b30f7f25161f44b8_2965x1395.png">
+    <img src="https://oss-global-cdn.unitree.com/static/0ab3a06368464245b30f7f25161f44b8_2965x1395.png" alt="Watch the Document" style="width: 100%;">
   </a>
 </p>
 
+これはネットワークトポロジー図で、G1ロボットを例にしています：
+
+<p align="center">
+  <a href="https://oss-global-cdn.unitree.com/static/9871e3bac4c54140b0839c68baf48a4a_1872x929.png">
+    <img src="https://oss-global-cdn.unitree.com/static/9871e3bac4c54140b0839c68baf48a4a_1872x929.png" alt="Watch the Document" style="width: 100%;">
+  </a>
+</p>
 
 
 # 1. 📦 前提条件
@@ -82,7 +130,7 @@ Ubuntu システムの `~/.bashrc` ファイルでは、デフォルトの設定
 
 
 
-# 2. ⚙️ TeleVision と Apple Vision Pro の設定
+# 2. ⚙️ 設定
 
 ## 2.1 📥 基本
 
@@ -95,7 +143,9 @@ Ubuntu システムの `~/.bashrc` ファイルでは、デフォルトの設定
 
 ## 2.2 🔌 ローカルストリーミング
 
-**Apple** は非 HTTPS 接続での WebXR を許可していません。アプリケーションをローカルでテストするには、自己署名証明書を作成し、クライアントにインストールする必要があります。Ubuntu マシンとルーターが必要です。Apple Vision Pro と Ubuntu **ホストマシン** を同じルーターに接続します。
+**Apple Vision Pro** 
+
+Apple は非 HTTPS 接続での WebXR を許可していません。アプリケーションをローカルでテストするには、自己署名証明書を作成し、クライアントにインストールする必要があります。Ubuntu マシンとルーターが必要です。Apple Vision Pro と Ubuntu **ホストマシン** を同じルーターに接続します。
 
 1. mkcert をインストールします: https://github.com/FiloSottile/mkcert
 2. **ホストマシン** のローカル IP アドレスを確認します:
@@ -139,6 +189,22 @@ Ubuntu システムの `~/.bashrc` ファイルでは、デフォルトの設定
 設定 > アプリ > Safari > 高度な設定 > 機能フラグ > WebXR 関連機能を有効にします。
 
 > 注意：新しい Vision OS 2 システムでは、この手順が異なります。証明書を AirDrop 経由で Apple Vision Pro デバイスにコピーした後、設定アプリの左上のアカウント欄の下に証明書関連情報欄が表示されます。それをクリックして、証明書の信頼を有効にします。
+
+------
+
+**2.2.2 PICO 4 Ultra Enterprise or Meta Quest 3**
+
+PICO 4 Ultra Enterprise と Meta-Quest 3 において、ハンドトラッキングを用いたテレオペレーションを試みました。
+
+PICO 4 Ultra Enterprise のシステム仕様：
+
+> システムバージョン：5.12.6.U；Android バージョン：14；ソフトウェアバージョン：c000_cf01_bv1.0.1_sv5.12.6_202412121344_sparrow_b4244_user; ブラウザーバージョン: [4.0.28 beta version](https://github.com/vuer-ai/vuer/issues/45#issuecomment-2674918619)
+
+Meta-Quest 3 のシステム仕様：
+
+> システムバージョン：49829370066100510；バージョン：62.0.0.273.343.570372087；ランタイムバージョン：62.0.0.269.341.570372063；OS バージョン：SQ3A.220605.009.A1
+
+ さらなる設定手順については、その [issue](https://github.com/unitreerobotics/avp_teleoperate/issues/32) をご覧ください。
 
 ## 2.3 🔎 ユニットテスト
 
@@ -222,20 +288,26 @@ unitree@PC2:~/h1_inspire_service/build$ ./h1_hand_example
 まず、**オペレーター B** は次の手順を実行する必要があります：
 
 1. `~/avp_teleoperate/teleop/teleop_hand_and_arm.py` の `if __name__ == '__main__':` コードの下にある `img_config` 画像クライアント設定を変更します。これは、3.1 節で PC2 に設定した画像サーバーパラメータと同じである必要があります。
-2. ロボット構成に応じて異なる起動パラメータを選択します
+2. ロボット構成に応じて異なる起動パラメータを選択します。 以下は、いくつかのコマンド例です:
 
 ```bash
-# 1. G1(29自由度) ロボット + Dex3-1 デクスタラスハンド（実際には、G1_29 は --arm のデフォルトパラメータなので、省略可能）
+# 1. G1（29自由度）ロボット + Dex3-1 多指ハンド（※ G1_29 は --arm のデフォルト値なので省略可能）
 (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=G1_29 --hand=dex3
 
-# 2. G1(29自由度) ロボットのみ
+# 2. G1（29自由度）ロボットのみ
 (tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py
 
-# 3. H1_2 ロボット（Inspire デクスタラスハンドは一時的に H1_2 ブランチでのみサポートされ、Main ブランチは後で更新されます）
-(tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=H1_2
+# 3. G1（23自由度）ロボット
+(tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=G1_23
 
-# 4. データの可視化と記録を有効にする場合は、--record オプションを追加します
-(tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --record
+# 4. H1_2 ロボット + Inspire Hand
+(tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=H1_2 --hand=inspire1
+
+# 5. H1 ロボット
+(tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=H1
+
+# 6. データの可視化および記録を有効にしたい場合は、--record オプションを追加してください
+(tv) unitree@Host:~/avp_teleoperate/teleop$ python teleop_hand_and_arm.py --arm=G1_23 --record
 ```
 
 3. プログラムが正常に起動すると、端末の最後の行に "Please enter the start signal (enter 'r' to start the subsequent program):" というメッセージが表示されます。
@@ -302,6 +374,7 @@ avp_teleoperate/
 │   │      ├── episode_writer.py          [模倣学習のデータを記録するために使用]  
 │   │      ├── mat_tool.py                [いくつかの小さな数学ツール]
 │   │      ├── weighted_moving_filter.py  [ジョイントデータをフィルタリングするため]
+│   │      ├── rerun_visualizer.py        [記録中のデータを可視化するため]
 │   │
 │   │──teleop_hand_and_arm.py   [遠隔操作の起動実行コード]
 ```
