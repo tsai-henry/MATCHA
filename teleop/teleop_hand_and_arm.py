@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 import time
 import traceback
+import atexit
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
@@ -85,7 +86,39 @@ def start_realsense_recording(name, save_dir=RAW_BAG_SAVE_DIR, stop_event=None):
     return rs_thread
 
 
+def clean_shutdown():
+    global rs_thread, stop_rs_event, recorder, tv_img_shm, wrist_img_shm, WRIST
+    print("[CLEANUP] Shutting down...")
 
+    try:
+        if rs_thread is not None:
+            stop_rs_event.set()
+            rs_thread.join()
+    except Exception as e:
+        print(f"[CLEANUP WARNING] Failed to stop rs_thread: {e}")
+
+    try:
+        tv_img_shm.close()
+        tv_img_shm.unlink()
+    except Exception as e:
+        print(f"[CLEANUP WARNING] Failed to clean tv_img_shm: {e}")
+
+    try:
+        if WRIST:
+            wrist_img_shm.close()
+            wrist_img_shm.unlink()
+    except Exception as e:
+        print(f"[CLEANUP WARNING] Failed to clean wrist_img_shm: {e}")
+
+    try:
+        if recorder:
+            recorder.close()
+    except Exception as e:
+        print(f"[CLEANUP WARNING] Recorder cleanup failed: {e}")
+
+    print("[CLEANUP] Done")
+
+atexit.register(clean_shutdown)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
