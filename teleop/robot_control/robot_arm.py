@@ -597,6 +597,7 @@ class H1_2_ArmController:
         # initialize lowcmd publisher and lowstate subscriber
         ChannelFactoryInitialize(0, "enx6c6e071b23db")
         self.lowcmd_publisher = ChannelPublisher(kTopicLowCommand, hg_LowCmd)
+
         self.lowcmd_publisher.Init()
         self.lowstate_subscriber = ChannelSubscriber(kTopicLowState, hg_LowState)
         self.lowstate_subscriber.Init()
