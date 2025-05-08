@@ -201,14 +201,12 @@ if __name__ == '__main__':
     
     if args.record:
         recorder = EpisodeWriter(task_dir = args.task_dir, frequency = args.frequency, rerun_log = True)
-        recording = False
-        
+        recorder.create_episode()
+
     try:
         cv2.namedWindow("record image", cv2.WINDOW_NORMAL)
-        print("Press 'r' to begin. After that, use keys:")
-        print("  's' - Start/stop recording")
-        print("  'q' - Quit and save")
-        print("  'e' - Emergency exit")
+        print("Press 'r' to begin.")
+
 
         user_input = input("Please enter the start signal (enter 'r' to start the subsequent program):\n")
         if user_input.lower() == 'r':
@@ -226,16 +224,8 @@ if __name__ == '__main__':
                     print("[KEY] Quit pressed. Stopping...")
                     running = False
                 elif key == ord('e'):
-                    print("[KEY] Emergency exit.")
+                    print("[KEY] Emergency exit!")
                     os._exit(1)
-                elif key == ord('s') and args.record:
-                    recording = not recording
-                    print(f"[KEY] Recording {'started' if recording else 'stopped'}.")
-                    if recording:
-                        if not recorder.create_episode():
-                            recording = False
-                    else:
-                        recorder.save_episode()
 
                 start_time = time.time()
                 head_rmat, left_wrist, right_wrist, left_hand, right_hand = tv_wrapper.get_data()
@@ -256,22 +246,6 @@ if __name__ == '__main__':
 
                 tv_resized_image = cv2.resize(tv_img_array, (tv_img_shape[1] // 2, tv_img_shape[0] // 2))
                 cv2.imshow("record image", tv_resized_image)
-                
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord('q'):
-                    print("[KEY] Quit pressed. Stopping...")
-                    running = False
-                elif key == ord('e'):
-                    print("[KEY] Emergency exit!")
-                    os._exit(1)
-                elif key == ord('s') and args.record:
-                    recording = not recording
-                    print(f"[KEY] Recording {'started' if recording else 'stopped'}.")
-                    if recording:
-                        if not recorder.create_episode():
-                            recording = False
-                    else:
-                        recorder.save_episode()
 
                 # record data
                 if args.record:
@@ -301,53 +275,52 @@ if __name__ == '__main__':
                     left_arm_torque = sol_tauff[:7]
                     right_arm_torque = sol_tauff[-7:]
 
-                    if recording:
-                        colors = {}
-                        depths = {}
-                        if BINOCULAR:
-                            colors[f"color_{0}"] = current_tv_image[:, :tv_img_shape[1]//2]
-                            colors[f"color_{1}"] = current_tv_image[:, tv_img_shape[1]//2:]
-                            if WRIST:
-                                colors[f"color_{2}"] = current_wrist_image[:, :wrist_img_shape[1]//2]
-                                colors[f"color_{3}"] = current_wrist_image[:, wrist_img_shape[1]//2:]
-                        else:
-                            colors[f"color_{0}"] = current_tv_image
-                            if WRIST:
-                                colors[f"color_{1}"] = current_wrist_image[:, :wrist_img_shape[1]//2]
-                                colors[f"color_{2}"] = current_wrist_image[:, wrist_img_shape[1]//2:]
-                        states = {
-                            "left_arm": {                                                                    
-                                "dof_angles":   left_arm_state.tolist(),              
-                            }, 
-                            "right_arm": {                                                                    
-                                "dof_angles":   right_arm_state.tolist(),                            
-                            },                        
-                            "left_hand": {                                                                    
-                                "dof_angles":   left_hand_state,
-                                "tactiles": hand_ctrl._unflatten_touch_arr(left_hand_touch)                            
-                            }, 
-                            "right_hand": {                                                                    
-                                "dof_angles":   right_hand_state,
-                                "tactiles": hand_ctrl._unflatten_touch_arr(right_hand_touch)
-                            }, 
-                        }
-                        actions = {
-                            "left_arm": {                                   
-                                "dof_angles":   left_arm_action.tolist(),       
-                                "dof_torques": left_arm_torque.tolist(),      
-                            }, 
-                            "right_arm": {                                   
-                                "dof_angles":   right_arm_action.tolist(),       
-                                "dof_torques": right_arm_torque.tolist(),       
-                            },                         
-                            "left_hand": {                                   
-                                "dof_angles":   left_hand_action,   
-                            }, 
-                            "right_hand": {                                   
-                                "dof_angles":   right_hand_action,
-                            }, 
-                        }
-                        recorder.add_item(colors=colors, states=states, actions=actions)
+                    colors = {}
+                    depths = {}
+                    if BINOCULAR:
+                        colors[f"color_{0}"] = current_tv_image[:, :tv_img_shape[1]//2]
+                        colors[f"color_{1}"] = current_tv_image[:, tv_img_shape[1]//2:]
+                        if WRIST:
+                            colors[f"color_{2}"] = current_wrist_image[:, :wrist_img_shape[1]//2]
+                            colors[f"color_{3}"] = current_wrist_image[:, wrist_img_shape[1]//2:]
+                    else:
+                        colors[f"color_{0}"] = current_tv_image
+                        if WRIST:
+                            colors[f"color_{1}"] = current_wrist_image[:, :wrist_img_shape[1]//2]
+                            colors[f"color_{2}"] = current_wrist_image[:, wrist_img_shape[1]//2:]
+                    states = {
+                        "left_arm": {                                                                    
+                            "dof_angles":   left_arm_state.tolist(),              
+                        }, 
+                        "right_arm": {                                                                    
+                            "dof_angles":   right_arm_state.tolist(),                            
+                        },                        
+                        "left_hand": {                                                                    
+                            "dof_angles":   left_hand_state,
+                            "tactiles": hand_ctrl._unflatten_touch_arr(left_hand_touch)                            
+                        }, 
+                        "right_hand": {                                                                    
+                            "dof_angles":   right_hand_state,
+                            "tactiles": hand_ctrl._unflatten_touch_arr(right_hand_touch)
+                        }, 
+                    }
+                    actions = {
+                        "left_arm": {                                   
+                            "dof_angles":   left_arm_action.tolist(),       
+                            "dof_torques": left_arm_torque.tolist(),      
+                        }, 
+                        "right_arm": {                                   
+                            "dof_angles":   right_arm_action.tolist(),       
+                            "dof_torques": right_arm_torque.tolist(),       
+                        },                         
+                        "left_hand": {                                   
+                            "dof_angles":   left_hand_action,   
+                        }, 
+                        "right_hand": {                                   
+                            "dof_angles":   right_hand_action,
+                        }, 
+                    }
+                    recorder.add_item(colors=colors, states=states, actions=actions)
 
                 current_time = time.time()
                 time_elapsed = current_time - start_time
@@ -387,4 +360,4 @@ if __name__ == '__main__':
         if args.record:
             recorder.close()
         print("Finally, exiting program...")
-        exit(0)
+        sys.exit(0)
