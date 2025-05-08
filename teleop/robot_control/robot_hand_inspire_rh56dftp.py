@@ -148,92 +148,77 @@ def interpolate_three_fingers(source_finger, finger_positions):
     return finger_positions
 
 
-def adjust_fingers_by_pressure(
-    averaged_patches,
-    source_finger,
-    finger_positions,
-    robot_single_hand_state_array,
-    step_size=0.02,
-    epsilon=0.003,
-    debug=False
-):
-    """
-    Iteratively adjusts follower fingers to match source finger's pressure.
-    Follower fingers:
-        - Fully straighten if source finger has no contact
-        - Curl if under-pressured
-        - Straighten if over-pressured
+class FollowerFingerController:
+    def __init__(self, source_finger="index", step_size=0.02, epsilon=0.003, debug=False):
+        self.source_finger = source_finger
+        self.step_size = step_size
+        self.epsilon = epsilon
+        self.debug = debug
+        self.follower_q = np.ones(6)  # Start fully extended
+        self.patch_map = {
+            "index": "fingerone_tip_touch",
+            "middle": "fingertwo_tip_touch",
+            "ring": "fingerthree_tip_touch",
+            "pinky": "fingerfour_tip_touch",
+            "thumb": "fingerfive_tip_touch"
+        }
 
-    Args:
-        averaged_patches (dict): Patch name to average pressure.
-        source_finger (str): Lead finger to match pressure from.
-        finger_positions (list or np.ndarray): Current 6-DOF robot joint targets.
-        robot_single_hand_state_array (np.ndarray): Real-time joint positions from the robot.
-        step_size (float): Adjustment step per iteration.
-        epsilon (float): Margin for pressure matching.
-        debug (bool): Whether to print debug logs.
+    def update(self, averaged_patches, robot_joint_state):
+        """
+        Updates follower fingers to match source finger pressure.
 
-    Returns:
-        np.ndarray: Updated 6-DOF robot joint targets.
-    """
-    finger_positions = np.array(finger_positions).copy()
-    robot_state = np.array(robot_single_hand_state_array[:])
+        Convention: 0.0 = fully curled, 1.0 = fully extended.
 
-    patch_map = {
-        "index": "fingerone_tip_touch",
-        "middle": "fingertwo_tip_touch",
-        "ring": "fingerthree_tip_touch",
-        "pinky": "fingerfour_tip_touch",
-        "thumb": "fingerfive_tip_touch"
-    }
+        Args:
+            averaged_patches (dict): Patch name → avg pressure.
+            robot_joint_state (np.ndarray): Current 6-DOF joint positions.
 
-    if source_finger not in patch_map:
-        raise ValueError(f"[ERROR] Invalid source_finger: {source_finger}")
+        Returns:
+            np.ndarray: New 6-DOF joint targets.
+        """
+        robot_joint_state = np.array(robot_joint_state)
+        output_q = robot_joint_state.copy()
 
-    source_patch = patch_map[source_finger]
-    source_pressure = averaged_patches.get(source_patch, 0.0)
+        source_patch = self.patch_map[self.source_finger]
+        source_pressure = averaged_patches.get(source_patch, 0.0)
 
-    if debug:
-        print(f"[DEBUG] Source: {source_finger} ({source_patch}) pressure = {source_pressure:.4f}")
+        if self.debug:
+            print(f"[DEBUG] Source finger pressure = {source_pressure:.4f}")
 
-    # === Force full extension if no lead contact ===
-    if source_pressure < epsilon:
-        if debug:
-            print("[DEBUG] Lead finger has no contact. Fully straightening all follower fingers.")
         for finger, idx in dofs.items():
-            if finger not in ["thumb_spread", source_finger]:
-                finger_positions[idx] = 1.0
-        return finger_positions
+            if finger in ["thumb_spread", self.source_finger]:
+                continue
 
-    # === Adaptive pressure tracking ===
-    for finger, idx in dofs.items():
-        if finger in ["thumb_spread", source_finger]:
-            continue
+            patch = self.patch_map.get(finger)
+            target_pressure = averaged_patches.get(patch, 0.0)
+            pressure_diff = source_pressure - target_pressure
 
-        patch = patch_map.get(finger)
-        target_pressure = averaged_patches.get(patch, 0.0)
-        pressure_diff = source_pressure - target_pressure
+            if source_pressure < self.epsilon:
+                self.follower_q[idx] = 1.0  # Fully extended
+                if self.debug:
+                    print(f"[DEBUG] {finger} set to fully extended (1.0)")
+            elif pressure_diff > self.epsilon:
+                # Not enough pressure → curl more (decrease value)
+                self.follower_q[idx] = max(0.0, self.follower_q[idx] - self.step_size)
+                if self.debug:
+                    print(f"[DEBUG] Curling {finger} → {self.follower_q[idx]:.3f}")
+            elif pressure_diff < -self.epsilon:
+                # Too much pressure → straighten more (increase value)
+                self.follower_q[idx] = min(1.0, self.follower_q[idx] + self.step_size)
+                if self.debug:
+                    print(f"[DEBUG] Straightening {finger} → {self.follower_q[idx]:.3f}")
+            else:
+                if self.debug:
+                    print(f"[DEBUG] {finger} pressure matched (within epsilon)")
 
-        if debug:
-            print(f"[DEBUG] {finger} ({patch}) pressure = {target_pressure:.4f}, diff = {pressure_diff:.4f}")
+            output_q[idx] = self.follower_q[idx]
 
-        if pressure_diff > epsilon:
-            # Under-pressured → curl more
-            finger_positions[idx] = max(0.0, robot_state[idx] - step_size)
-            if debug:
-                print(f"[DEBUG] Curling {finger} → {finger_positions[idx]:.3f}")
-        elif pressure_diff < -epsilon:
-            # Over-pressured → straighten more
-            finger_positions[idx] = min(1.0, robot_state[idx] + step_size)
-            if debug:
-                print(f"[DEBUG] Straightening {finger} → {finger_positions[idx]:.3f}")
-        else:
-            if debug:
-                print(f"[DEBUG] {finger} pressure matched (within epsilon)")
+        if self.debug:
+            print(f"[DEBUG] Output joint command: {output_q}")
 
-    if debug:
-        print(f"[DEBUG] Final adjusted positions: {finger_positions}")
-    return finger_positions
+        return output_q
+
+
 
 
 class ReplayInspireControllerRH56DFTP:
@@ -500,8 +485,10 @@ class InspireControllerRH56DFTP:
                 # 4. Interpolate finger positions based on pressure
                 # left_q_target = adjust_fingers_by_pressure(left_avg_patches, "index", dual_hand_state_array, left_q_target)
                 right_finger_positions = np.array(dual_hand_state_array[6:])
-                right_q_target = adjust_fingers_by_pressure(right_avg_patches, "index", right_finger_positions, right_q_target)
+                follower_controller = FollowerFingerController(source_finger="index", debug=True)
 
+                # Inside control_process:
+                right_q_target = follower_controller.update(right_avg_patches, right_hand_state_array[:6])
                 self.ctrl_dual_hand(left_q_target, right_q_target)
 
                 elapsed = time.time() - start_time
