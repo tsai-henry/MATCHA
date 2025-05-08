@@ -70,23 +70,41 @@ def colorize_pressure(val, max_val=0.3):
     return f"\033[38;2;{red};0;{blue}m{val:.4f}\033[0m"
 
 def print_colored_patch_averages_both_hands(left_avg, right_avg):
-    """
-    Print patch averages for both hands side by side with color-coded intensity.
-    
-    Args:
-        left_avg (dict): Patch name to average pressure (left hand).
-        right_avg (dict): Patch name to average pressure (right hand).
-    """
+    def colorize_pressure(p):
+        intensity = int(p * 255)
+        return f"\033[38;2;{intensity};0;0m{p:.3f}\033[0m"
+
+    name_map = {
+        "fingerone_top_touch": "Index top",
+        "fingertwo_top_touch": "Middle top",
+        "fingerthree_top_touch": "Ring top",
+        "fingerfour_top_touch": "Pinky top",
+        "fingerfive_top_touch": "Thumb top",
+        "fingerone_tip_touch": "Index tip",
+        "fingertwo_tip_touch": "Middle tip",
+        "fingerthree_tip_touch": "Ring tip",
+        "fingerfour_tip_touch": "Pinky tip",
+        "fingerfive_tip_touch": "Thumb tip",
+        "fingerfive_middle_touch": "Thumb mid",
+        "fingerone_palm_touch": "Index pad",
+        "fingertwo_palm_touch": "Middle pad",
+        "fingerthree_palm_touch": "Ring pad",
+        "fingerfour_palm_touch": "Pinky pad",
+        "fingerfive_palm_touch": "Thumb pad",
+        "palm_touch": "Palm"
+    }
+
     all_keys = sorted(set(left_avg.keys()).union(right_avg.keys()))
-    max_key_len = max(len(k) for k in all_keys)
-    
-    print("Average pressure per patch (Left vs Right):")
+    max_key_len = max(len(name_map.get(k, k)) for k in all_keys)
+
+    print("\nAverage pressure per patch (Left vs Right):")
     for k in all_keys:
+        name = name_map.get(k, k)
         left_val = left_avg.get(k, 0.0)
         right_val = right_avg.get(k, 0.0)
         left_col = colorize_pressure(np.clip(left_val, 0, 1))
         right_col = colorize_pressure(np.clip(right_val, 0, 1))
-        print(f"{k.ljust(max_key_len)} : {left_col}   |   {right_col}")
+        print(f"{name.ljust(max_key_len)} : {left_col}   |   {right_col}")
 
 
 def visualize_hand_touch_map(averaged_patches):
@@ -130,45 +148,93 @@ def interpolate_three_fingers(source_finger, finger_positions):
     return finger_positions
 
 
-def adjust_fingers_by_pressure(averaged_patches, source_finger, finger_positions, delta=0.05):
+def adjust_fingers_by_pressure(
+    averaged_patches,
+    source_finger,
+    finger_positions,
+    robot_single_hand_state_array,
+    step_size=0.02,
+    epsilon=0.003,
+    debug=False
+):
     """
-    Increase other fingers' angles if their pressure is less than source_finger's.
+    Iteratively adjusts follower fingers to match source finger's pressure.
+    Follower fingers:
+        - Fully straighten if source finger has no contact
+        - Curl if under-pressured
+        - Straighten if over-pressured
 
     Args:
         averaged_patches (dict): Patch name to average pressure.
-        source_finger (str): Name of finger to compare from (e.g. "index").
-        finger_positions (list or np.ndarray): 6-DOF joint values.
-        delta (float): Amount to increase under-pressured fingers by.
+        source_finger (str): Lead finger to match pressure from.
+        finger_positions (list or np.ndarray): Current 6-DOF robot joint targets.
+        robot_single_hand_state_array (np.ndarray): Real-time joint positions from the robot.
+        step_size (float): Adjustment step per iteration.
+        epsilon (float): Margin for pressure matching.
+        debug (bool): Whether to print debug logs.
 
     Returns:
-        np.ndarray: Adjusted joint values.
+        np.ndarray: Updated 6-DOF robot joint targets.
     """
     finger_positions = np.array(finger_positions).copy()
-    source_idx = dofs[source_finger]
+    robot_state = np.array(robot_single_hand_state_array[:])
 
-    # Map finger name to its main patch
     patch_map = {
-        "index": "fingerone_top_touch",
-        "middle": "fingertwo_top_touch",
-        "ring": "fingerthree_top_touch",
-        "pinky": "fingerfour_top_touch",
-        "thumb": "fingerfive_top_touch"
+        "index": "fingerone_tip_touch",
+        "middle": "fingertwo_tip_touch",
+        "ring": "fingerthree_tip_touch",
+        "pinky": "fingerfour_tip_touch",
+        "thumb": "fingerfive_tip_touch"
     }
 
     if source_finger not in patch_map:
-        raise ValueError(f"Unsupported source_finger: {source_finger}")
+        raise ValueError(f"[ERROR] Invalid source_finger: {source_finger}")
 
-    source_pressure = averaged_patches.get(patch_map[source_finger], 0.0)
+    source_patch = patch_map[source_finger]
+    source_pressure = averaged_patches.get(source_patch, 0.0)
 
+    if debug:
+        print(f"[DEBUG] Source: {source_finger} ({source_patch}) pressure = {source_pressure:.4f}")
+
+    # === Force full extension if no lead contact ===
+    if source_pressure < epsilon:
+        if debug:
+            print("[DEBUG] Lead finger has no contact. Fully straightening all follower fingers.")
+        for finger, idx in dofs.items():
+            if finger not in ["thumb_spread", source_finger]:
+                finger_positions[idx] = 1.0
+        return finger_positions
+
+    # === Adaptive pressure tracking ===
     for finger, idx in dofs.items():
         if finger in ["thumb_spread", source_finger]:
             continue
-        patch = patch_map.get(finger)
-        if patch and averaged_patches.get(patch, 0.0) < source_pressure:
-            finger_positions[idx] += delta
 
+        patch = patch_map.get(finger)
+        target_pressure = averaged_patches.get(patch, 0.0)
+        pressure_diff = source_pressure - target_pressure
+
+        if debug:
+            print(f"[DEBUG] {finger} ({patch}) pressure = {target_pressure:.4f}, diff = {pressure_diff:.4f}")
+
+        if pressure_diff > epsilon:
+            # Under-pressured → curl more
+            finger_positions[idx] = max(0.0, robot_state[idx] - step_size)
+            if debug:
+                print(f"[DEBUG] Curling {finger} → {finger_positions[idx]:.3f}")
+        elif pressure_diff < -epsilon:
+            # Over-pressured → straighten more
+            finger_positions[idx] = min(1.0, robot_state[idx] + step_size)
+            if debug:
+                print(f"[DEBUG] Straightening {finger} → {finger_positions[idx]:.3f}")
+        else:
+            if debug:
+                print(f"[DEBUG] {finger} pressure matched (within epsilon)")
+
+    if debug:
+        print(f"[DEBUG] Final adjusted positions: {finger_positions}")
     return finger_positions
-    
+
 
 class ReplayInspireControllerRH56DFTP:
     def __init__(self):
@@ -410,21 +476,31 @@ class InspireControllerRH56DFTP:
                 # 1. Get sensor values from the "fingerone_tip_touch" patch
                 left_tip_data = get_patch_data(left_touch_dict, "fingerone_tip_touch")
                 right_tip_data = get_patch_data(right_touch_dict, "fingerone_tip_touch")
-                print("Left hand  - Sensor values in 'fingerone_tip_touch':", left_tip_data)
-                print("Right hand - Sensor values in 'fingerone_tip_touch':", right_tip_data)
 
                 # 2. Compute average patch values for each hand
                 left_avg_patches = compute_patch_averages(left_touch_dict)
                 right_avg_patches = compute_patch_averages(right_touch_dict)
 
                 # 3. Print side-by-side comparison
-                print_colored_patch_averages_both_hands(left_avg_patches, right_avg_patches)
+                print_interval = 100  # print every 30 frames (~3/sec if fps=100)
+                frame_count = 0
+
+                # Inside your control_process loop:
+                frame_count += 1
+                if frame_count % print_interval == 0:
+                    print("Left hand  - Sensor values in 'fingerone_tip_touch':", left_tip_data)
+                    print("Right hand - Sensor values in 'fingerone_tip_touch':", right_tip_data)
+
+                    print_colored_patch_averages_both_hands(left_avg_patches, right_avg_patches)
+
+                    print("[DEBUG] Adjusting fingers...")
 
                 # # 3. Visualize the patch averages across the hand
                 # visualize_hand_touch_map(averaged_patches)
                 # 4. Interpolate finger positions based on pressure
-                left_q_target = adjust_fingers_by_pressure(left_avg_patches, "index", left_q_target)
-                right_q_target = adjust_fingers_by_pressure(right_avg_patches, "index", right_q_target)
+                # left_q_target = adjust_fingers_by_pressure(left_avg_patches, "index", dual_hand_state_array, left_q_target)
+                right_finger_positions = np.array(dual_hand_state_array[6:])
+                right_q_target = adjust_fingers_by_pressure(right_avg_patches, "index", right_finger_positions, right_q_target)
 
                 self.ctrl_dual_hand(left_q_target, right_q_target)
 
