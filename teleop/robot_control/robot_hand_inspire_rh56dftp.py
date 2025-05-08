@@ -16,6 +16,36 @@ state_topic_l = "rt/inspire_hand/state/l"
 touch_ropic_r = "rt/inspire_hand/touch/r"
 touch_topic_l = "rt/inspire_hand/touch/l"
 
+dofs = {
+    "thumb": 4,
+    "index": 3,
+    "middle": 2,
+    "ring": 1,
+    "pinky": 0,
+    "thumb_spread": 5
+    }
+
+def interpolate_three_fingers(source_finger, finger_positions):
+    """
+    Copies the source finger's position to the other non-thumb fingers.
+    
+    Args:
+        source_finger (str): One of "index", "middle", "ring", or "pinky".
+        finger_positions (list or np.ndarray): Array-like of 6 joint values [thumb, index, middle, ring, pinky, thumb_spread].
+
+    Returns:
+        np.ndarray: Modified copy of finger_positions with interpolation applied.
+    """
+    source_idx = dofs[source_finger]
+    if source_finger == "thumb" or source_finger == "thumb_spread":
+        raise ValueError("Cannot interpolate from thumb or thumb_spread")
+
+    finger_positions = np.array(finger_positions).copy()
+    for finger, idx in dofs.items():
+        if finger not in ["thumb", "thumb_spread"] and idx != source_idx:
+            finger_positions[idx] = finger_positions[source_idx]
+    return finger_positions
+    
 
 class ReplayInspireControllerRH56DFTP:
     def __init__(self):
@@ -236,6 +266,11 @@ class InspireControllerRH56DFTP:
                         dual_hand_state_array[:] = state_data
                         dual_hand_action_array[:] = action_data
                         dual_hand_touch_array[:] = touch_data
+
+                # Interpolate fingers when testing disability
+                source_finger = "index"
+                left_q_target = interpolate_three_fingers(source_finger, left_q_target)
+                right_q_target = interpolate_three_fingers(source_finger, right_q_target)
 
                 self.ctrl_dual_hand(left_q_target, right_q_target)
 
