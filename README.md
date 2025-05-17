@@ -1,40 +1,59 @@
-<div align="center">
-  <h1 align="center"> avp_teleoperate </h1>
-  <h3 align="center"> Unitree Robotics </h3>
-  <p align="center">
-    <a> English </a> | <a href="README_zh-CN.md">中文</a> | <a href="README_ja-JP.md">日本語</a>
-  </p>
-</div>
+# VR Teleoperation for Unitree H1 Humanoid (with Finger Augmentation)
 
-# 📺 Video Demo
+This repository provides a simple and robust VR teleoperation system for the Unitree H1 humanoid robot, with support for finger controllers to augment missing or limited robot fingers. The system is built on top of the open-source [avp_teleoperate](https://github.com/unitreerobotics/avp_teleoperate) project, with additional features for hand and finger teleoperation.
 
-<p align="center">
-  <table>
-    <tr>
-      <td align="center" width="50%">
-        <a href="https://www.youtube.com/watch?v=OTWHXTu09wE" target="_blank">
-          <img src="https://img.youtube.com/vi/OTWHXTu09wE/maxresdefault.jpg" alt="Video 1" width="75%">
-        </a>
-        <p><b> G1 (29DoF) + Dex3-1 </b></p>
-      </td>
-      <td align="center" width="50%">
-        <a href="https://www.youtube.com/watch?v=pNjr2f_XHoo" target="_blank">
-          <img src="https://img.youtube.com/vi/pNjr2f_XHoo/maxresdefault.jpg" alt="Video 2" width="75%">
-        </a>
-        <p><b> H1_2 (Arm 7DoF) </b></p>
-      </td>
-    </tr>
-  </table>
-</p>
+## Features
+- VR/XR-based teleoperation for Unitree H1 humanoid
+- Finger controller support for augmenting missing fingers
+- Easy setup for both robot and control laptop
 
+## Quick Start
 
+### 1. Prerequisites
+- Follow the [avp_teleoperate setup instructions](https://github.com/unitreerobotics/avp_teleoperate#readme) for dependencies and environment setup.
+- Ensure you have access to both the control laptop and the Unitree H1 robot.
 
+### 2. Network Configuration
+- Connect both the control laptop and the robot to the **same local network**.
+- Both devices must be in the `192.168.123.XXX` subnet with subnet mask `255.255.255.0`.
+- You can check your IP addresses using `ifconfig` (Linux/macOS) or `ipconfig` (Windows).
 
+### 3. Clone the Repository
+On **both** the control laptop and the robot:
+```bash
+git clone <this_repo_url>
+cd <this_repo>
+```
 
-# 0. 📖 Introduction
-This repository implements teleoperation of the **Unitree humanoid robot** using **XR Devices** ( such as Apple Vision Pro、 PICO 4 Ultra Enterprise or Meta Quest 3 ).
+### 4. Running the System
 
-Here are the currently supported robots,
+#### On the Robot
+1. Start the image server:
+    ```bash
+    python image_server/image_server.py
+    ```
+2. Start the headless driver (see [Headless_double_driver.py](https://github.com/unitreerobotics/avp_teleoperate/blob/main/teleop/Headless_double_driver.py)):
+    ```bash
+    python teleop/Headless_double_driver.py
+    ```
+
+#### On the Control Laptop
+1. Start the VR teleoperation interface:
+    ```bash
+    python teleop/teleop_hand_and_arm.py
+    ```
+
+### 5. Additional Notes
+- For full setup, troubleshooting, and advanced configuration, refer to the [avp_teleoperate README](https://github.com/unitreerobotics/avp_teleoperate#readme).
+- This repo adds finger controller support for enhanced manipulation and dexterity.
+- Ensure all dependencies are installed as described in the avp_teleoperate documentation.
+
+## Acknowledgements
+This project builds on the open-source [avp_teleoperate](https://github.com/unitreerobotics/avp_teleoperate) repository. Please see their repo for further documentation and licensing.
+
+---
+
+**For questions or contributions, please open an issue or pull request.**
 
 <table>
   <tr>
