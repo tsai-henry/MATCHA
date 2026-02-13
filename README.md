@@ -13,7 +13,7 @@ MATCHA: Mobility Augmenting Teleoperation-Controlled Humanoid Arm 🍵
 
 ## Overview
 
-MATCHA is a teleoperation framework designed to enable individuals with hand disabilities (specifically missing fingers or restricted motion) to control mhumanoid robots effectively. By using a Virtual Reality (VR) headset for hand tracking, the system maps limited human inputs (Thumb and Index finger) to a full 5-fingered robotic hand using novel interpolation strategies.
+MATCHA is a teleoperation framework designed to enable individuals with hand disabilities (specifically missing fingers or restricted motion) to control humanoid robots with multi-fingered hands effectively. By using an Apple Vision Pro VR headset for hand tracking, the system maps limited human inputs (thumb and index finger) to actuate a pair of 5-fingered Inspire dexterous hands on the Unitree H1-2 humanoid.
 
 This repository contains the updated hand controller drivers, control algorithms, and dataset collection tools built on top of the open-source [Unitree XR Teleoperate](https://github.com/unitreerobotics/avp_teleoperate) project.
 
@@ -90,16 +90,17 @@ This method uses tactile feedback to adjust the unactuated fingers dynamically.
 
 ## Results
 
-We conducted 100 trials across 10 everyday objects (e.g., pear, water bottle, stapler).
+We conducted 100 pick-item grasping trials across 10 everyday objects (e.g., pear, water bottle, stapler).
 
 | Controller | Success Rate | Key Observations |
 | :--- | :--- | :--- |
-| **Pose Matching** | 58% | Reliable for simple shapes; struggles with fragile items (dented pears). |
+| **Pose Matching** | 58% | Reliable for simple shapes; struggles with fragile items. |
 | **Force Matching** | 62% | Better adaptation; prone to jitter due to sensor noise. |
 
 ## Acknowledgments
 
+*   **Professor Shankar Sastry** for providing resources and teaching fundamentals.
+*   **Anirudh Pai** for working on the Inspire hand controller and networking setup.
+*   **Haoru Xue** for debugging, guidance, and mentorship.
 *   **Unitree Robotics** for the base `avp_teleoperate` library.
-*   **Trevor Darrell's Lab** for providing the Unitree H1-2 robot.
-*   **Anirudh Pai** for assistance with the Inspire hand controller.
-*   **Haoru Xue** and **Prof. Sastry** for debugging and guidance.
+*   **UC Berkeley EECS Instructional Support Group and course staff** for helping make all of this possible.
