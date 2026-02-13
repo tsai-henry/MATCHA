@@ -62,18 +62,30 @@ Please follow the installation instructions in the [Unitree XR Teleoperate](http
 
 ## Usage
 
-1.  **Start the Robot:** Place the Unitree H1-2 in debug mode and ensure it is suspended or stable.
-2.  **Launch VR Interface:** Start the hand tracking application on the Apple Vision Pro.
-3.  **Run Teleoperation:**
-    Execute the main control script, specifying the desired control mode:
+### 1. Configuration
+*   **SSL Certificates:** The Vuer interface requires HTTPS. Generate `cert.pem` and `key.pem` in the project root:
+    ```bash
+    # Example using mkcert
+    mkcert -key-file key.pem -cert-file cert.pem 0.0.0.0 localhost 127.0.0.1
+    ```
+*   **IP Address:** Verify the robot's IP address in `teleop/image_server/image_client.py` (Default: `192.168.123.164`).
+
+### 2. Teleoperation
+1.  **Start the Robot:** Place the Unitree H1-2 in debug mode. Ensure it is suspended or stable.
+2.  **Launch VR Interface:** 
+    *   On the Apple Vision Pro, navigate to `https://<HOST_IP>:8012` (allow self-signed certificates if prompted).
+3.  **Run Teleoperation & Data Collection:**
+    Execute the main controller script. This handles robot control, VR streaming, and optional data recording.
 
     ```bash
-    # For Pose Matching
-    python main.py --mode pose
-
-    # For Pressure/Force Matching
-    python main.py --mode force
+    python teleop/teleop_hand_and_arm.py --record --name my_experiment
     ```
+
+    **Arguments:**
+    *   `--record`: Enable data collection (RGB-D, proprioception, VR inputs).
+    *   `--name`: Name tag for the recording (default: timestamp).
+    *   `--task_dir`: Directory to save data (default: `./utils/data`).
+    *   `--frequency`: Recording frequency (default: 30Hz).
 
 ## Results
 
