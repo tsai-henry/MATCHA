@@ -58,20 +58,7 @@ This method uses tactile feedback to adjust the unactuated fingers dynamically.
 
 ## Installation
 
-1.  Clone this repository:
-    ```bash
-    git clone https://github.com/tsai-henry/MATCHA.git
-    cd MATCHA
-    ```
-
-2.  Install dependencies (ensure you have the Unitree SDKs installed):
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3.  **Network Configuration:**
-    *   Ensure the Apple Vision Pro and the Robot are on the same local network.
-    *   Update the IP configuration in the config scripts to match your router's assignment.
+Please follow the installation instructions in the [Unitree XR Teleoperate](https://github.com/unitreerobotics/avp_teleoperate) repository.
 
 ## Usage
 
