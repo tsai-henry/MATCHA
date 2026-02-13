@@ -1,4 +1,4 @@
-Copyright [2025] [HangZhou YuShu TECHNOLOGY CO.,LTD. ("Unitree Robotics")]
+Copyright [2025] [Caitlin Regan and Henry Tsai]
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,5 +28,6 @@ This code builds upon following open-source code-bases. Please visit the URLs to
 10) https://github.com/facebookresearch/detr
 11) https://github.com/Dingry/BunnyVisionPro
 12) https://github.com/unitreerobotics/unitree_sdk2_python
+13) https://github.com/unitreerobotics/xr_teleoperate
 
 ------------------
