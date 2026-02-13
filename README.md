@@ -1,9 +1,11 @@
 # MATCHA: Mobility Augmenting Teleoperation-Controlled Humanoid Arm
-
-**Authors:** Henry Tsai, Caitlin Regan (UC Berkeley)  
-**Course:** EECS 106B Sp25  
-**Paper:** [MATCHA Paper.pdf](./MATCHA%20Paper.pdf)
-
+![Experimental Setup](./MATCHA%20Water%20Bottle%20Grasping%20Demo.png)
+<p align="center">
+  <a href="https://drive.google.com/drive/folders/1Snr74SE7jA_POdz03ILZVOsoFncml9S2?usp=sharing"><strong>Download Grasping Dataset</strong></a>
+</p>
+<p align="center">
+  <a href="./MATCHA%20Paper.pdf"><strong>Paper PDF</strong></a>
+</p>
 ## Overview
 
 MATCHA is a teleoperation framework designed to enable individuals with hand disabilities (specifically missing fingers or restricted motion) to control humanoid robots effectively. By using a Virtual Reality (VR) headset for hand tracking, the system maps limited human inputs (Thumb and Index finger) to a full 5-fingered robotic hand using novel interpolation strategies.
